@@ -8,6 +8,7 @@
 import shared
 import SwiftUI
 import UIPilot
+import WRCore
 
 struct MainView: View {
     @State
@@ -35,42 +36,7 @@ struct MainView: View {
 
     var body: some View {
         ZStack {
-            UIPilotHost(navigator) { route in
-                switch onEnum(of: route) {
-                case .loginScreen:
-                    LoginScreen()
-
-                case .tableListScreen:
-                    TableListScreen()
-
-                case .switchEventScreen:
-                    SwitchEventScreen()
-
-                case .settingsScreen:
-                    SettingsScreen()
-
-                case let .registerScreen(screen):
-                    RegisterScreen(deepLink: screen.registerLink)
-
-                case .updateApp:
-                    UpdateAppScreen()
-
-                case let .tableDetailScreen(screen):
-                    TableDetailScreen(table: screen.table)
-
-                case let .orderScreen(screen):
-                    OrderScreen(table: screen.table, initialItemId: screen.initialItemId)
-
-                case let .billingScreen(screen):
-                    BillingScreen(table: screen.table)
-
-                case .loginScannerScreen:
-                    LoginScannerScreen()
-
-                case .stripeInitializationScreen:
-                    EmptyView()
-                }
-            }
+            resolvedView()
         }
         .preferredColorScheme(selectedScheme)
         .overlay(alignment: .bottom) {
@@ -132,6 +98,45 @@ struct MainView: View {
         .onAppear {
             VersionChecker.shared.checkVersion {
                 showUpdateAvailableAlert = true
+            }
+        }
+    }
+
+    private func resolvedView() -> some View {
+        UIPilotHost(navigator) { route in
+            switch onEnum(of: route) {
+            case .loginScreen:
+                LoginScreen()
+
+            case .tableListScreen:
+                TableListScreen()
+
+            case .switchEventScreen:
+                SwitchEventScreen()
+
+            case .settingsScreen:
+                SettingsScreen()
+
+            case let .registerScreen(screen):
+                RegisterScreen(deepLink: screen.registerLink)
+
+            case .updateApp:
+                UpdateAppScreen()
+
+            case let .tableDetailScreen(screen):
+                TableDetailScreen(table: screen.table)
+
+            case let .orderScreen(screen):
+                OrderScreen(table: screen.table, initialItemId: screen.initialItemId)
+
+            case let .billingScreen(screen):
+                BillingScreen(table: screen.table)
+
+            case .loginScannerScreen:
+                LoginScannerScreen()
+
+            case .stripeInitializationScreen:
+                EmptyView()
             }
         }
     }

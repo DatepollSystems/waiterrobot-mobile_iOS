@@ -1,40 +1,32 @@
 import Foundation
 import shared
+import SharedUI
 import SwiftUI
+import WRCore
 
 struct LaunchScreen: View {
+    @Environment(\.isPreview) private var isPreview
+
     private let minimumOnScreenTimeSeconds = 3.0
-    private let device = UIDevice.current.userInterfaceIdiom
 
     @State private var startupFinished = false
+    @State private var showProgressView = false
 
     var body: some View {
         ZStack {
-            if case .phone = device {
-                VStack {
-                    Spacer()
+            VStack(spacing: 0) {
+                Image.logoRounded
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 280, height: 280)
+                    .ignoresSafeArea()
+                    .padding(.bottom, 23)
+                    .transition(.slide)
 
-                    Image(.launch)
-                        .resizable()
-                        .scaledToFit()
-                }
-                .padding(.horizontal, -2)
-                .ignoresSafeArea()
-            } else {
-                ZStack {
-                    Image(.logoRounded)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 150)
+                if showProgressView {
+                    ProgressView()
                         .padding()
-
-                    VStack {
-                        Spacer()
-
-                        ProgressView()
-                            .padding()
-                            .padding(.bottom)
-                    }
+                        .foregroundStyle(.green)
                 }
             }
 
@@ -42,18 +34,30 @@ struct LaunchScreen: View {
                 MainView()
             }
         }
-        .onAppear {
+        .animation(.spring, value: startupFinished)
+        .animation(.spring, value: showProgressView)
+        .task {
+            defer {
+                print("Show progress")
+                showProgressView = true
+            }
+
+            do {
+                try await Task.sleep(seconds: 0.1)
+            } catch {}
+        }
+        .task {
             // This is needed otherwise previews will crash randomly
-            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                Task {
-                    async let setup: () = WaiterRobotApp.setup()
-                    async let delay: () = delay()
+            if !isPreview {
+                async let setup: () = WRCore.setup()
+                async let delay: () = delay()
 
-                    await setup
-                    await delay
+                await setup
+                await delay
 
-                    startupFinished = true
-                }
+                startupFinished = true
+            } else {
+                print("Running from preview, skipping init")
             }
         }
     }
@@ -66,7 +70,7 @@ struct LaunchScreen: View {
 }
 
 #Preview {
-    PreviewView {
-        LaunchScreen()
-    }
+//    PreviewView {
+    LaunchScreen()
+//    }
 }
